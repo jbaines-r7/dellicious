@@ -42,6 +42,16 @@ C:\Users\albinolobster\Desktop>.\dellicious.exe -p 740 -e 0 -d 1
 [!] Clean exit! o7
 ```
 
+## Artifacts
+
+This does leave artifacts on disk. Currently I don't clean up:
+
+* Files in C:\Windows\Temp\
+* Logging data in C:\Windows\INF\setupapi.dev
+* DBUtilDrv2 service is left running (although it's in a bad / unusable state and will go away on reboot)
+* DBUtilDrv2 is left in the driverstore
+* I'm sure there are things in the event log that indicate driver installed / removed, etc.
+
 ## Credit
 
 This codebase is heavily influenced by PPLKiller (mentioned above). It also was influenced by the dbutil_2_3.sys metasploit module as well as [Mitch Zakocs'](https://www.mitchellzakocs.com/blog/dbutil) write up on CVE-2021-21551.
