@@ -4,7 +4,7 @@ Dellicious is a tool for enabling/disabling LSA protection on arbitrary processe
 
 * [PPLKiller](https://github.com/RedCursorSecurityConsulting/PPLKiller) - LSA protect bypass using `rtcore.sys`
 * [PPLDump](https://github.com/itm4n/PPLdump) - LSA protect bypass using `DefineDosDevice` and known dlls
-* [mimidrv](https://posts.specterops.io/mimidrv-in-depth-4d273d19e148) - Mimikatz kernel driver
+* [mimidrv](https://posts.specterops.io/mimidrv-in-depth-4d273d19e148) - Mimikatz kernel driver. LSA protect bypass by being a signed kernel driver :-D
 
 LSA protection blocks memory access from other processes. When LSA protection is enabled lsass.exe can't have it's memory dumped by tools like mimikatz. Obviously, running mimikatz is extremely desirable for an attacker. Using this tool the attacker is able to disable the protection and dump/access memory.
 
