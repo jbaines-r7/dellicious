@@ -1,0 +1,89 @@
+;
+; DBUtilDrv2.inf
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=DellUtils ; TODO: edit Class
+ClassGuid={E0DEF58B-33E8-4FF0-A75D-F20E1F68E5D7}
+; ClassGuid={78A1C341-4539-11d3-B88D-00C04FAD5171} ; TODO: edit ClassGuid
+Provider=%ManufacturerName%
+CatalogFile=DBUtilDrv2.cat
+DriverVer = 05/06/2021,2.7.0.0
+PnpLockdown=1
+[DestinationDirs]
+DefaultDestDir = 12
+DBUtilDrv2_Device_CoInstaller_CopyFiles = 11
+
+; ================= Class section =====================
+
+[ClassInstall32]
+Addreg=SampleClassReg
+
+[SampleClassReg]
+HKR,,,0,%ClassName%
+HKR,,Icon,,-5
+HKR,,Security,,"D:P(A;;GA;;;SY)(A;;GA;;;BA)(A;;GA;;;LA)"
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+DBUtilDrv2.sys  = 1,,
+WdfCoInstaller01009.dll=1 ; make sure the number matches with SourceDisksNames
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName%=Standard,NTamd64
+
+[Standard.NTamd64]
+%DBUtilDrv2.DeviceDesc%=DBUtilDrv2_Device, Root\DBUtilDrv2 ; TODO: edit hw-id
+
+[DBUtilDrv2_Device.NT]
+CopyFiles=Drivers_Dir
+
+[Drivers_Dir]
+DBUtilDrv2.sys
+
+;-------------- Service installation
+[DBUtilDrv2_Device.NT.Services]
+AddService = DBUtilDrv2,%SPSVCINST_ASSOCSERVICE%, DBUtilDrv2_Service_Inst
+
+; -------------- DBUtilDrv2 driver install sections
+[DBUtilDrv2_Service_Inst]
+DisplayName    = %DBUtilDrv2.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\DBUtilDrv2.sys
+
+;
+;--- DBUtilDrv2_Device Coinstaller installation ------
+;
+
+[DBUtilDrv2_Device.NT.CoInstallers]
+AddReg=DBUtilDrv2_Device_CoInstaller_AddReg
+CopyFiles=DBUtilDrv2_Device_CoInstaller_CopyFiles
+
+[DBUtilDrv2_Device_CoInstaller_AddReg]
+HKR,,Security,,"D:P(A;;GA;;;SY)(A;;GA;;;BA)(A;;GA;;;LA)"
+HKR,,CoInstallers32,0x00010000, "WdfCoInstaller01009.dll,WdfCoInstaller"
+
+[DBUtilDrv2_Device_CoInstaller_CopyFiles]
+WdfCoInstaller01009.dll
+
+[DBUtilDrv2_Device.NT.Wdf]
+KmdfService =  DBUtilDrv2, DBUtilDrv2_wdfsect
+[DBUtilDrv2_wdfsect]
+KmdfLibraryVersion = 1.9
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+ManufacturerName="Dell Technologies" ;TODO: Replace with your manufacturer name
+ClassName="DellUtils" ; TODO: edit ClassName
+DiskName = "DBUtilDrv2 Installation Disk"
+DBUtilDrv2.DeviceDesc = "DBUtilDrv2 Device"
+DBUtilDrv2.SVCDESC = "DBUtilDrv2 Service"
