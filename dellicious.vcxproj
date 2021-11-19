@@ -155,10 +155,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\popl.hpp" />
-    <ClInclude Include="src\resources.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="src\resources.rc" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />

