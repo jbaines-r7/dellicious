@@ -168,7 +168,7 @@ namespace
     {
         char value[255] = { 0x00 };
         DWORD BufferSize = sizeof(value);
-        if (ERROR_SUCCESS != RegGetValueA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "ReleaseId", RRF_RT_REG_SZ, NULL, &value, &BufferSize))
+        if (ERROR_SUCCESS != RegGetValueA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "CurrentBuild", RRF_RT_REG_SZ, NULL, &value, &BufferSize))
         {
             std::cerr << "[-] Couldn't determine the Windows release" << std::endl;
             return false;
@@ -177,46 +177,50 @@ namespace
         std::cout << "[+] Windows version found: " << value << std::endl;
         switch (atoi(value))
         {
-        case 1607:
-            p_offsets.UniqueProcessIdOffset = 0x02e8;
-            p_offsets.ActiveProcessLinksOffset = 0x02f0;
-            p_offsets.SignatureLevelOffset = 0x06c8;
-            return true;
-        case 1803:
-        case 1809:
-            p_offsets.UniqueProcessIdOffset = 0x02e0;
-            p_offsets.ActiveProcessLinksOffset = 0x02e8;
-            p_offsets.SignatureLevelOffset = 0x06c8;
-            return true;
-        case 1903:
-        case 1909:
-            p_offsets.UniqueProcessIdOffset = 0x02e8;
-            p_offsets.ActiveProcessLinksOffset = 0x02f0;
-            p_offsets.SignatureLevelOffset = 0x06f8;
-            return true;
-        case 2004:
-        case 2009:
-            p_offsets.UniqueProcessIdOffset = 0x0440;
-            p_offsets.ActiveProcessLinksOffset = 0x0448;
-            p_offsets.SignatureLevelOffset = 0x0878;
-            return true;
-        default:
-            std::cerr << "[-] Unknown offsets for this version. Perhaps add them yourself?" << std::endl;
-            break;
+            case 10240: // Gold
+                p_offsets.UniqueProcessIdOffset = 0x02e8;
+                p_offsets.ActiveProcessLinksOffset = 0x02f0;
+                p_offsets.SignatureLevelOffset = 0x06a8;
+                return true;
+            case 10586: // 2015 update
+                p_offsets.UniqueProcessIdOffset = 0x02e8;
+                p_offsets.ActiveProcessLinksOffset = 0x02f0;
+                p_offsets.SignatureLevelOffset = 0x06b0;
+                return true;
+            case 14393: // 2016 update
+                p_offsets.UniqueProcessIdOffset = 0x02e8;
+                p_offsets.ActiveProcessLinksOffset = 0x02f0;
+                p_offsets.SignatureLevelOffset = 0x06c8;
+                return true;
+            case 15063: // April 2017 update
+            case 16299: // Fall 2017 update
+            case 17134: // April 2018 update
+            case 17763: // October 2018 update
+                p_offsets.UniqueProcessIdOffset = 0x02e0;
+                p_offsets.ActiveProcessLinksOffset = 0x02e8;
+                p_offsets.SignatureLevelOffset = 0x06c8;
+                return true;
+            case 18362: // May 2019 update
+            case 18363: // November 2019 update
+                p_offsets.UniqueProcessIdOffset = 0x02e8;
+                p_offsets.ActiveProcessLinksOffset = 0x02f0;
+                p_offsets.SignatureLevelOffset = 0x06f8;
+                return true;
+            case 19041: // May 2020 update
+            case 19042: // October 2020 update
+            case 19043: // May 2021 update
+            case 19044: // October 2021 update
+            case 22000: // Win 11 June/September 2021
+                p_offsets.UniqueProcessIdOffset = 0x0440;
+                p_offsets.ActiveProcessLinksOffset = 0x0448;
+                p_offsets.SignatureLevelOffset = 0x0878;
+                return true;
+            default:
+                std::cerr << "[-] Unknown offsets for this version. Perhaps add them yourself?" << std::endl;
+                break;
         }
+
         return false;
-    }
-
-    void writeResource(int p_id, const char* p_path)
-    {
-        HRSRC resource_handle = FindResource(NULL, MAKEINTRESOURCE(p_id), RT_RCDATA);
-        HGLOBAL loaded = LoadResource(NULL, resource_handle);
-        void* data = LockResource(loaded);
-        unsigned int size = SizeofResource(NULL, resource_handle);
-
-        std::ofstream file_out(p_path, std::ios::out | std::ios::binary);
-        file_out.write((char*)data, size);
-        file_out.close();
     }
 
     bool driver2Setup(HDEVINFO& p_devInfo, SP_DEVINFO_DATA& p_deviceInfoData, const char* p_infPath)
